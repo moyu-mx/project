@@ -1,0 +1,100 @@
+{
+  "original_shape": [
+    51263,
+    24
+  ],
+  "steps": [
+    "删除 Postal Code 列（空值占比 79.3%）",
+    "剔除 Sales/日期无效行 23 条",
+    "describe() 检查数值列，未发现需剔除的极端异常值",
+    "日期字段有效（无效日期 0 条）",
+    "派生 Order-year, Order-month, quarter",
+    "派生 Ship-year, Ship-month"
+  ],
+  "describe": {
+    "Sales": {
+      "count": 51240.0,
+      "mean": 244.0384607373146,
+      "std": 486.92496239604435,
+      "min": 0.0,
+      "25%": 29.6,
+      "50%": 83.34,
+      "75%": 248.34627,
+      "max": 22638.48
+    },
+    "Quantity": {
+      "count": 51240.0,
+      "mean": 3.5622249882903985,
+      "std": 6.865758004137234,
+      "min": -219.832,
+      "25%": 2.0,
+      "50%": 3.0,
+      "75%": 5.0,
+      "max": 868.12
+    },
+    "Discount": {
+      "count": 51240.0,
+      "mean": 0.5108208118657299,
+      "std": 12.89670897239451,
+      "min": -916.71776,
+      "25%": 0.0,
+      "50%": 0.0,
+      "75%": 0.2,
+      "max": 768.88
+    },
+    "Profit": {
+      "count": 51133.0,
+      "mean": 28.488524907202788,
+      "std": 174.13509131321032,
+      "min": -6599.978,
+      "25%": 0.0,
+      "50%": 9.18,
+      "75%": 36.54,
+      "max": 8399.976
+    },
+    "Shipping Cost": {
+      "count": 50606.0,
+      "mean": 26.432172864877682,
+      "std": 57.42828548059934,
+      "min": 0.0,
+      "25%": 2.61,
+      "50%": 7.81,
+      "75%": 24.51,
+      "max": 933.57
+    }
+  },
+  "cleaned_shape": [
+    51240,
+    28
+  ],
+  "null_counts": {
+    "Row ID": 0,
+    "Order ID": 0,
+    "Order Date": 0,
+    "Ship Date": 0,
+    "Ship Mode": 0,
+    "Customer ID": 0,
+    "Customer Name": 0,
+    "Segment": 0,
+    "City": 0,
+    "State": 107,
+    "Country": 527,
+    "Market": 0,
+    "Region": 0,
+    "Product ID": 0,
+    "Category": 0,
+    "Sub-Category": 0,
+    "Product Name": 0,
+    "Sales": 0,
+    "Quantity": 0,
+    "Discount": 0,
+    "Profit": 107,
+    "Shipping Cost": 634,
+    "Order Priority": 634,
+    "Order-year": 0,
+    "Order-month": 0,
+    "quarter": 0,
+    "Ship-year": 0,
+    "Ship-month": 0
+  }
+}

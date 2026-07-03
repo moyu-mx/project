@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "superstore-analytics": {
+      "command": "python",
+      "args": ["-m", "src.mcp.server"],
+      "cwd": "e:/26实训/prj",
+      "env": {}
+    }
+  }
+}

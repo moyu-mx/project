@@ -1,0 +1,9 @@
+{
+  "csv_rows": 51240,
+  "db_orders": 51240,
+  "rows_match": true,
+  "csv_sales_sum": 12504530.73,
+  "db_sales_sum": 12504530.73,
+  "sales_match": true,
+  "order_date_nulls": 0
+}

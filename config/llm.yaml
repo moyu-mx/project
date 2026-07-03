@@ -1,0 +1,12 @@
+# 大模型对话：local（本地）| api（DeepSeek OpenAI 兼容接口）
+mode: local
+api_enabled: true
+
+local:
+  description: "本地规则引擎生成 SQL"
+
+api:
+  provider: deepseek
+  model: deepseek-chat
+  api_key: ""   # 见 config/llm_keys.yaml 或环境变量 DEEPSEEK_API_KEY
+  base_url: https://api.deepseek.com

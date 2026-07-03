@@ -1,0 +1,172 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+body { font-family: "Microsoft YaHei", sans-serif; background: #f4f6f9; color: #222; display: flex; flex-direction: column; }
+body.lightbox-open { overflow: hidden; }
+header { flex-shrink: 0; background: linear-gradient(135deg, #1e3a5f, #2563eb); color: #fff; padding: 1.5rem 2rem; }
+header h1 { font-size: 1.6rem; }
+.layout { flex: 1; display: flex; min-height: 0; overflow: hidden; }
+nav {
+  width: 200px;
+  flex-shrink: 0;
+  background: #fff;
+  border-right: 1px solid #e5e7eb;
+  padding: 1rem;
+  overflow-y: auto;
+}
+nav a { display: block; padding: .6rem; color: #374151; text-decoration: none; border-radius: 6px; margin-bottom: .3rem; }
+nav a:hover, nav a.active { background: #eff6ff; color: #2563eb; }
+main { flex: 1; min-width: 0; padding: 1.5rem 2rem; overflow-y: auto; }
+section { background: #fff; border-radius: 10px; padding: 1.2rem; margin-bottom: 1.2rem; box-shadow: 0 1px 4px rgba(0,0,0,.06); scroll-margin-top: 1rem; }
+section h2 { margin-bottom: .8rem; font-size: 1.2rem; border-left: 4px solid #2563eb; padding-left: .6rem; }
+.stats { display: flex; gap: 1.5rem; list-style: none; flex-wrap: wrap; margin-top: .8rem; }
+.stats li { background: #eff6ff; padding: .6rem 1rem; border-radius: 8px; }
+
+/* 图表缩略图 */
+.chart-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; }
+.chart-card { border-radius: 8px; }
+.chart-thumb {
+  width: 100%;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  display: block;
+  cursor: zoom-in;
+  transition: box-shadow .2s, transform .2s;
+}
+.chart-thumb:hover { box-shadow: 0 6px 20px rgba(37,99,235,.2); transform: scale(1.02); }
+figcaption { font-size: .85rem; color: #374151; margin-top: .5rem; text-align: center; font-weight: 500; }
+
+/* 全屏灯箱 */
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.lightbox[hidden] { display: none !important; }
+.lightbox-mask {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, .72);
+}
+.lightbox-dialog {
+  position: relative;
+  z-index: 1;
+  background: #fff;
+  border-radius: 12px;
+  width: min(1100px, 94vw);
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 24px 60px rgba(0,0,0,.4);
+  overflow: hidden;
+}
+.lightbox-close {
+  position: absolute;
+  top: .5rem;
+  right: .7rem;
+  z-index: 2;
+  width: 36px; height: 36px;
+  border: none;
+  border-radius: 50%;
+  background: #f3f4f6;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  color: #374151;
+}
+.lightbox-close:hover { background: #e5e7eb; }
+.lightbox-title {
+  padding: 1rem 3rem .75rem 1.25rem;
+  font-size: 1.2rem;
+  border-bottom: 1px solid #e5e7eb;
+  flex-shrink: 0;
+}
+.lightbox-content {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+.lightbox-image-area {
+  flex: 1.2;
+  min-width: 0;
+  padding: 1rem;
+  background: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: auto;
+}
+.lightbox-image-area img {
+  max-width: 100%;
+  max-height: 70vh;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 4px;
+  box-shadow: 0 2px 12px rgba(0,0,0,.12);
+}
+.lightbox-analysis {
+  flex: 1;
+  min-width: 280px;
+  max-width: 400px;
+  padding: 1.25rem;
+  border-left: 1px solid #e5e7eb;
+  overflow-y: auto;
+  background: #fff;
+}
+.lightbox-analysis h3 {
+  font-size: .95rem;
+  color: #2563eb;
+  margin-bottom: .75rem;
+  padding-bottom: .5rem;
+  border-bottom: 2px solid #dbeafe;
+}
+.lightbox-analysis p {
+  line-height: 1.85;
+  font-size: .9rem;
+  color: #374151;
+  text-align: justify;
+}
+@media (max-width: 768px) {
+  .lightbox-content { flex-direction: column; overflow-y: auto; }
+  .lightbox-analysis { max-width: none; border-left: none; border-top: 1px solid #e5e7eb; }
+  .lightbox-image-area img { max-height: 45vh; }
+}
+
+.chat-box { border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; }
+.chat-mode-bar { font-size: .9rem; color: #374151; margin-bottom: .75rem; display: flex; align-items: center; gap: .5rem; }
+.mode-select {
+  padding: .35rem .6rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: .9rem;
+  background: #fff;
+  color: #374151;
+  cursor: pointer;
+}
+.mode-select:disabled { cursor: not-allowed; opacity: .6; }
+.mode-select option:disabled { color: #9ca3af; }
+.diagnose pre.reasoning { font-size: .75rem; white-space: pre-wrap; margin: .4rem 0; color: #4b5563; max-height: 120px; overflow-y: auto; }
+.diagnose details { margin: .4rem 0; }
+#chat-log { min-height: 200px; max-height: 400px; overflow-y: auto; padding: 1rem; background: #fafafa; }
+.msg { margin-bottom: .8rem; padding: .6rem .8rem; border-radius: 8px; font-size: .9rem; }
+.msg.user { background: #dbeafe; margin-left: 2rem; }
+.msg.bot { background: #f3f4f6; margin-right: 2rem; }
+.msg pre.sql-block { background: #1e293b; color: #e2e8f0; padding: .5rem; border-radius: 4px; overflow-x: auto; margin: .4rem 0; font-size: .8rem; }
+.result-meta { margin: .5rem 0 .75rem; padding: .6rem .8rem; background: #f0f9ff; border-radius: 6px; border-left: 3px solid #2563eb; }
+.result-tag { display: inline-block; background: #2563eb; color: #fff; font-size: .75rem; padding: .1rem .45rem; border-radius: 4px; margin-right: .4rem; }
+.result-summary { font-size: .85rem; color: #4b5563; margin-top: .35rem; }
+.filter-note { font-size: .8rem; color: #b45309; margin-top: .3rem; }
+.chat-chart-box { width: 100%; height: 320px; margin: .5rem 0; }
+.msg table { width: 100%; border-collapse: collapse; margin-top: .5rem; font-size: .85rem; }
+.msg th, .msg td { border: 1px solid #d1d5db; padding: .3rem .5rem; }
+.msg th { background: #e5e7eb; }
+#chat-form { display: flex; border-top: 1px solid #e5e7eb; }
+#question { flex: 1; border: none; padding: .8rem 1rem; font-size: 1rem; outline: none; }
+#chat-form button { background: #2563eb; color: #fff; border: none; padding: 0 1.5rem; cursor: pointer; }
+#chat-form button:hover { background: #1d4ed8; }
+.diagnose { padding: .8rem 1rem; background: #fffbeb; border-top: 1px solid #fde68a; font-size: .85rem; }
+.hidden { display: none; }
