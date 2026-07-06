@@ -72,6 +72,12 @@ async def index(request: Request):
             "segment_share.png",
         ],
         "rfm": ["rfm_distribution.png"],
+        "forecast": [
+            "sales_forecast.png",
+            "aov_forecast.png",
+            "seasonality_forecast.png",
+            "region_forecast.png",
+        ],
     }
     try:
         stats = _db_stats()

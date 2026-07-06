@@ -1,9 +1,15 @@
 """基于数据库动态生成各图表分析解读。"""
 from __future__ import annotations
 
+import json
+from pathlib import Path
+
 from sqlalchemy import text
 
+from src.config import CHARTS_DIR
 from src.db.connection import get_engine
+
+FORECAST_REPORT = CHARTS_DIR.parent / "forecast_report.json"
 
 # 静态标题与说明框架
 CHART_META: dict[str, dict[str, str]] = {
@@ -20,6 +26,10 @@ CHART_META: dict[str, dict[str, str]] = {
     "segment_yearly_sales.png": {"title": "各类型客户年度销售额", "kind": "segment_sales"},
     "segment_category_sales.png": {"title": "客户群体与产品类别销售额分析", "kind": "segment_category"},
     "rfm_distribution.png": {"title": "RFM 客户价值分布（2014）", "kind": "rfm"},
+    "sales_forecast.png": {"title": "年度销售额预测（2015）", "kind": "sales_forecast"},
+    "aov_forecast.png": {"title": "月度客单价趋势与预测", "kind": "aov_forecast"},
+    "seasonality_forecast.png": {"title": "月度销售额淡旺季预测", "kind": "seasonality_forecast"},
+    "region_forecast.png": {"title": "前六区域销售额预测", "kind": "region_forecast"},
 }
 
 
@@ -31,7 +41,91 @@ def _fmt_money(v: float) -> str:
     return f"{v:.2f}"
 
 
-def _build_analysis(kind: str, conn) -> str:
+def _load_forecast_report() -> dict:
+    if FORECAST_REPORT.exists():
+        try:
+            return json.loads(FORECAST_REPORT.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            pass
+    return {}
+
+
+def _build_forecast_analysis(kind: str, report: dict) -> str:
+    if not report:
+        return "请先运行 python -m src.analysis.forecast 生成预测报告。"
+
+    fy = int(report.get("forecast_year", 2015))
+
+    if kind == "sales_forecast":
+        block = report.get("sales_forecast", {})
+        p, lo, hi = block.get("predicted"), block.get("lower"), block.get("upper")
+        if p is None:
+            return "暂无预测数据。"
+        lines = [
+            "对应历史图：年度销售额与增长率。",
+            f"算法：{block.get('method', '线性回归')}。",
+            f"基于 2011—2014 共 48 个月原始订单销售额拟合趋势，",
+            f"预测 {fy} 全年销售额 {_fmt_money(float(p))}（区间 {_fmt_money(float(lo))}—{_fmt_money(float(hi))}）。",
+            "2014 年后仍呈上升态势，可提前备货并加大营销预算。",
+        ]
+        return "".join(lines)
+
+    if kind == "aov_forecast":
+        block = report.get("aov_forecast", {})
+        pm = block.get("predicted_monthly_avg")
+        pa = block.get("predicted_annual")
+        if pm is None or pa is None:
+            return "暂无预测数据。"
+        lo_m, hi_m = block.get("lower_monthly_avg"), block.get("upper_monthly_avg")
+        lo_a, hi_a = block.get("lower_annual"), block.get("upper_annual")
+        return (
+            "对应历史图：年度客单价趋势。"
+            f"算法：{block.get('method', 'ML 融合模型')}。"
+            f"月度模型 {block.get('model_sales', '')}/{block.get('model_customers', '')}，"
+            f"年度模型 {block.get('model_annual', '')}；"
+            f"时序交叉验证 MAE≈{float(block.get('cv_mae', 0)):.0f} 元。"
+            f"预测 {fy} 月均客单价约 {float(pm):.0f} 元（区间 {float(lo_m):.0f}—{float(hi_m):.0f}）；"
+            f"折合年度客单价约 {float(pa):.0f} 元（区间 {float(lo_a):.0f}—{float(hi_a):.0f}），"
+            "延续上升态势。"
+        )
+
+    if kind == "seasonality_forecast":
+        block = report.get("seasonality_forecast", {})
+        monthly = block.get("monthly") or {}
+        peak = block.get("peak_month")
+        total = block.get("annual_total")
+        if not monthly:
+            return "暂无预测数据。"
+        lines = [
+            "对应历史图：月度销售额与淡旺季。",
+            f"算法：{block.get('method', '趋势+季节指数')}。",
+            f"预测 {fy} 年度销售额合计 {_fmt_money(float(total))}；",
+            f"峰值月份预计为 {peak} 月。",
+            "建议在预测旺季前 1—2 个月加大库存与促销力度，淡季安排客户召回活动。",
+        ]
+        return "".join(lines)
+
+    if kind == "region_forecast":
+        markets = (report.get("region_forecast") or {}).get("markets") or {}
+        if not markets:
+            return "暂无预测数据。"
+        ranked = sorted(markets.items(), key=lambda x: x[1].get("predicted", 0), reverse=True)
+        lines = [
+            "对应历史图：前六区域年度销售额。",
+            f"算法：{(report.get('region_forecast') or {}).get('method', '分区域线性回归')}。",
+        ]
+        for m, v in ranked[:3]:
+            lines.append(f"{m} 预测 {_fmt_money(float(v['predicted']))}；")
+        lines.append("APAC、EU 等增速区域可优先配置运营资源。")
+        return "".join(lines)
+
+    return "暂无预测说明。"
+
+
+def _build_analysis(kind: str, conn, forecast_report: dict | None = None) -> str:
+    if kind.endswith("_forecast") or kind in ("sales_forecast", "aov_forecast", "seasonality_forecast", "region_forecast"):
+        return _build_forecast_analysis(kind, forecast_report or {})
+
     try:
         if kind == "sales_growth":
             rows = conn.execute(text(
@@ -222,15 +316,21 @@ def _build_analysis(kind: str, conn) -> str:
 def build_insights() -> dict[str, dict[str, str]]:
     """返回 {文件名: {title, analysis}}，analysis 含真实数据。"""
     result: dict[str, dict[str, str]] = {}
+    forecast_report = _load_forecast_report()
     try:
         engine = get_engine()
         with engine.connect() as conn:
             for fname, meta in CHART_META.items():
                 result[fname] = {
                     "title": meta["title"],
-                    "analysis": _build_analysis(meta["kind"], conn),
+                    "analysis": _build_analysis(meta["kind"], conn, forecast_report),
                 }
     except Exception:
         for fname, meta in CHART_META.items():
-            result[fname] = {"title": meta["title"], "analysis": "请先运行 ETL 入库后再查看数据分析。"}
+            kind = meta["kind"]
+            if kind.endswith("_forecast") or "forecast" in kind:
+                analysis = _build_forecast_analysis(kind, forecast_report)
+            else:
+                analysis = "请先运行 ETL 入库后再查看数据分析。"
+            result[fname] = {"title": meta["title"], "analysis": analysis}
     return result

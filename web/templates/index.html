@@ -36,6 +36,7 @@
       <a href="#region">区域分析</a>
       <a href="#customer">客户分析</a>
       <a href="#rfm">RFM 分群</a>
+      <a href="#forecast">预测分析</a>
       <a href="#chat">智能查询</a>
     </nav>
     <main>
@@ -83,6 +84,14 @@
         <h2>RFM 客户价值</h2>
         <div class="chart-grid">
           {% for img in charts.rfm %}{{ chart_figure(img) }}{% endfor %}
+        </div>
+      </section>
+
+      <section id="forecast">
+        <h2>预测分析</h2>
+        <p>销售额、区域、淡旺季采用<strong>线性回归 + 季节指数</strong>；客单价采用 <strong>ML 融合模型</strong>（RF/GBR/Ridge 自动选型）。基于 2011—2014 原始订单明细，展望 2015 年（虚线/金色为预测值）。</p>
+        <div class="chart-grid">
+          {% for img in charts.forecast %}{{ chart_figure(img) }}{% endfor %}
         </div>
       </section>
 

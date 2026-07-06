@@ -2,7 +2,7 @@
 
 基于大型超市零售订单数据的分析系统：完成数据清洗、多维可视化分析、SQLite 入库，并提供 Web 仪表盘与自然语言 SQL 查询能力。
 
-当前版本v1.1
+当前版本v1.2，新增数据分析预测模块
 
 ## 功能概览
 
@@ -169,22 +169,42 @@ Cursor 配置示例见 `config/mcp.cursor.json`。
 ## 分析图表
 
 
-| 图表                             | 说明                   |
-| ------------------------------ | -------------------- |
-| `sales_growth.png`             | 年度销售额与同比增长率          |
-| `avg_order_value.png`          | 年度客单价趋势              |
-| `profit_by_month.png`          | 2011–2014 各年月度利润     |
-| `seasonality_sales.png`        | 月度销售额淡旺季             |
-| `shipping_cost_trend.png`      | 发货成本趋势               |
-| `region_share.png`             | 区域销售额占比（<1% 合并为「其他」） |
-| `region_yearly_sales_top6.png` | 前六区域 2011–2014 年度销售额 |
-| `new_old_customers.png`        | 新老客户数量               |
-| `segment_share.png`            | 客户类型占比               |
-| `segment_yearly_count.png`     | 各年客户类型数量             |
-| `segment_yearly_sales.png`     | 各类型客户年度销售额           |
-| `segment_category_sales.png`   | 客户群体与产品类别销售额         |
-| `rfm_distribution.png`         | RFM 客户价值分布（2014）     |
+| 图表                             | 说明                                 |
+| ------------------------------ | ---------------------------------- |
+| `sales_growth.png`             | 年度销售额与同比增长率                        |
+| `avg_order_value.png`          | 年度客单价趋势                            |
+| `profit_by_month.png`          | 2011–2014 各年月度利润                   |
+| `seasonality_sales.png`        | 月度销售额淡旺季                           |
+| `shipping_cost_trend.png`      | 发货成本趋势                             |
+| `region_share.png`             | 区域销售额占比（<1% 合并为「其他」）               |
+| `region_yearly_sales_top6.png` | 前六区域 2011–2014 年度销售额               |
+| `new_old_customers.png`        | 新老客户数量                             |
+| `segment_share.png`            | 客户类型占比                             |
+| `segment_yearly_count.png`     | 各年客户类型数量                           |
+| `segment_yearly_sales.png`     | 各类型客户年度销售额                         |
+| `segment_category_sales.png`   | 客户群体与产品类别销售额                       |
+| `rfm_distribution.png`         | RFM 客户价值分布（2014）                   |
+| `sales_forecast.png`           | 2015 年度销售额预测（月度线性回归）               |
+| `aov_forecast.png`             | 2015 客单价预测（RF/GBR/Ridge 自动选型 + 融合） |
+| `seasonality_forecast.png`     | 2015 月度销售额/淡旺季预测                   |
+| `region_forecast.png`          | 前六区域 2015 销售额预测                    |
 
+
+### 预测分析说明
+
+从现有展示图中选取 **4 组** 具有明显时间趋势、适合外推的指标做 2015 年预测（虚线/绿色/金色为预测值）：
+
+
+| 历史图       | 预测图                        | 算法                                        | 数据粒度              |
+| --------- | -------------------------- | ----------------------------------------- | ----------------- |
+| 年度销售额与增长率 | `sales_forecast.png`       | 月度销售额一元线性回归，汇总全年                          | 48 个月原始订单         |
+| 年度客单价趋势   | `aov_forecast.png`         | Random Forest / GBR / Ridge 自动选型 + 年度特征融合 | 48 月原始订单 + 年度聚合特征 |
+| 月度销售额淡旺季  | `seasonality_forecast.png` | 线性趋势 + 季节指数                               | 48 个月原始订单         |
+| 前六区域年度销售额 | `region_forecast.png`      | 各区域独立年度线性回归                               | 区域×年原始订单          |
+
+
+单独运行预测：`python -m src.analysis.forecast`  
+预测报告：`results/forecast_report.json`
 
 ## 数据清洗说明
 

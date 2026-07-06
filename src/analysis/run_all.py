@@ -9,6 +9,7 @@ sys.path.insert(0, str(ROOT))
 
 from src.analysis import (
     customers,
+    forecast,
     profit,
     regions,
     rfm,
@@ -30,6 +31,8 @@ def main() -> None:
     customers.run()
     rfm.run()
     shipping.run()
+    print("=== 阶段3: 预测分析 ===")
+    forecast.run()
     print("=== 全部分析完成，图表见 results/charts/ ===")
 
 
