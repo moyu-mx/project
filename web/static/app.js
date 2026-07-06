@@ -470,7 +470,7 @@ if (form) {
 
       diagnose.classList.remove("hidden");
 
-      diagnose.innerHTML = `调用方式：${label} | 模板：${disp.template_label || "—"} | 工具：${formatTools(data.tools_used)} | 耗时：${data.elapsed_ms} 毫秒 | 展示 ${data.row_count} 条
+      diagnose.innerHTML = `调用方式：${label} | 模板：${disp.template_label || "—"} | 工具：${formatTools(data.tools_used)} | 展示 ${data.row_count} 条
 
         <details><summary>推理过程</summary><pre class="reasoning">${data.reasoning || ""}</pre></details>
 
