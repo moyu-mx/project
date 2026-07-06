@@ -5,6 +5,7 @@ __pycache__/
 dist/
 build/
 .env
+config/llm_keys.yaml
 data/superstore.db
 *.db
 logs/

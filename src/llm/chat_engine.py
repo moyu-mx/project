@@ -75,37 +75,48 @@ def _build_system_prompt(schema_ctx: str, glossary_ctx: str) -> str:
     return f"{base}\n\n--- 数据库结构 ---\n{schema_ctx}\n\n--- 字段对照 ---\n{glossary_ctx}\n\n{JSON_SCHEMA_HINT}"
 
 
-def _local_structured(question: str) -> tuple[StructuredChatResponse, str]:
-    reasoning = ["本地模式：规则匹配 + 预设展示模板。"]
+def _local_structured(question: str, tools_used: list[str]) -> tuple[StructuredChatResponse, str]:
+    reasoning = ["本地模式：MCP 工具加载 schema + 本地规则匹配。"]
+    tools_used.extend(["get_database_schema", "get_field_glossary"])
+    schema_ctx = dispatch_tool("get_database_schema")
+    dispatch_tool("get_field_glossary")
+    reasoning.append(f"已通过 MCP 注入数据库结构（{len(schema_ctx)} 字符）与字段对照。")
+
+    def _finalize(sql: str, template: str, title: str, x_col: str | None, y_col: str | None,
+                  y_cols: list[str] | None = None, summary: str = "") -> StructuredChatResponse:
+        processed = postprocess_sql(sql, question)
+        ok, err = _mcp_validate_sql(processed, tools_used)
+        if ok:
+            reasoning.append("MCP validate_sql_query 校验通过。")
+        else:
+            reasoning.append(f"SQL 校验警告：{err[:120]}")
+        return StructuredChatResponse(
+            sql=processed,
+            template=template,
+            chart_title=title,
+            x_column=x_col,
+            y_column=y_col,
+            y_columns=y_cols,
+            value_min=0.1,
+            summary=summary or f"按规则生成 SQL，推荐{TEMPLATE_LABELS.get(template, template)}展示。",
+        )
+
     for pattern, sql, template, x_col, y_col in LOCAL_RULES:
         if pattern.search(question):
             title = question.strip().rstrip("？?")[:40]
-            structured = StructuredChatResponse(
-                sql=postprocess_sql(sql, question),
-                template=template,
-                chart_title=title,
-                x_column=x_col,
-                y_column=y_col,
-                value_min=0.1,
-                summary=f"按规则生成 SQL，推荐{TEMPLATE_LABELS.get(template, template)}展示。",
-            )
             reasoning.append(f"命中规则：{pattern.pattern}")
-            return structured, "\n".join(reasoning)
+            return _finalize(sql, template, title, x_col, y_col), "\n".join(reasoning)
 
-    fallback = StructuredChatResponse(
-        sql=postprocess_sql(
-            "SELECT order_year, total_sales, total_profit FROM agg_sales_by_year ORDER BY order_year LIMIT 100",
-            question,
-        ),
-        template="line",
-        chart_title="年度销售与利润概览",
-        x_column="order_year",
-        y_column="total_sales",
-        y_columns=["total_sales", "total_profit"],
-        value_min=0.1,
+    reasoning.append("未命中具体规则，使用默认年度销售模板。")
+    fallback = _finalize(
+        "SELECT order_year, total_sales, total_profit FROM agg_sales_by_year ORDER BY order_year LIMIT 100",
+        "line",
+        "年度销售与利润概览",
+        "order_year",
+        "total_sales",
+        y_cols=["total_sales", "total_profit"],
         summary="未命中具体规则，返回年度销售概览。",
     )
-    reasoning.append("使用默认年度销售模板。")
     return fallback, "\n".join(reasoning)
 
 
@@ -200,7 +211,7 @@ async def _api_structured(question: str, cfg: dict, tools_used: list[str]) -> tu
             ),
         })
 
-    local_fb, fb_reason = _local_structured(question)
+    local_fb, fb_reason = _local_structured(question, tools_used)
     reasoning.append(f"API 多轮修正仍失败，回退本地规则。{fb_reason}")
     return local_fb, "\n".join(reasoning)
 
@@ -219,7 +230,7 @@ async def chat_query(question: str, mode_override: str | None = None) -> ChatRes
         structured, reasoning = await _api_structured(question, cfg, tools_used)
     else:
         mode = "local"
-        structured, reasoning = _local_structured(question)
+        structured, reasoning = _local_structured(question, tools_used)
 
     return ChatResult(
         sql=structured.sql,

@@ -63,8 +63,14 @@ def _db_stats() -> dict:
 async def index(request: Request):
     charts = {
         "sales": ["sales_growth.png", "avg_order_value.png", "profit_by_month.png", "seasonality_sales.png", "shipping_cost_trend.png"],
-        "region": ["region_share.png"],
-        "customer": ["new_old_customers.png", "segment_share.png", "segment_yearly_count.png", "segment_yearly_sales.png"],
+        "region": ["region_share.png", "region_yearly_sales_top6.png"],
+        "customer": [
+            "new_old_customers.png",
+            "segment_yearly_count.png",
+            "segment_yearly_sales.png",
+            "segment_category_sales.png",
+            "segment_share.png",
+        ],
         "rfm": ["rfm_distribution.png"],
     }
     try:

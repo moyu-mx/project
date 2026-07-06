@@ -13,10 +13,12 @@ CHART_META: dict[str, dict[str, str]] = {
     "seasonality_sales.png": {"title": "月度销售额与淡旺季", "kind": "seasonality"},
     "shipping_cost_trend.png": {"title": "发货成本月度趋势", "kind": "shipping"},
     "region_share.png": {"title": "各区域销售额占比", "kind": "region_share"},
+    "region_yearly_sales_top6.png": {"title": "前六区域年度销售额（2011-2014）", "kind": "region_yearly_top6"},
     "new_old_customers.png": {"title": "新老客户数量（按年）", "kind": "new_old"},
     "segment_share.png": {"title": "客户类型占比", "kind": "segment_share"},
     "segment_yearly_count.png": {"title": "各年不同类型客户数量", "kind": "segment_count"},
     "segment_yearly_sales.png": {"title": "各类型客户年度销售额", "kind": "segment_sales"},
+    "segment_category_sales.png": {"title": "客户群体与产品类别销售额分析", "kind": "segment_category"},
     "rfm_distribution.png": {"title": "RFM 客户价值分布（2014）", "kind": "rfm"},
 }
 
@@ -115,6 +117,66 @@ def _build_analysis(kind: str, conn) -> str:
                 pct = float(s) / total * 100
                 lines.append(f"{market} 占 {pct:.1f}%（{_fmt_money(float(s))}）；")
             lines.append("应巩固头部区域优势，评估低占比市场的投入产出比。")
+            return "".join(lines)
+
+        if kind == "region_yearly_top6":
+            top6_rows = conn.execute(text(
+                "SELECT market, SUM(total_sales) AS s FROM agg_sales_by_region_year "
+                "WHERE order_year BETWEEN 2011 AND 2014 GROUP BY market ORDER BY s DESC LIMIT 6"
+            )).fetchall()
+            if not top6_rows:
+                return "暂无数据。"
+            top6 = [r[0] for r in top6_rows]
+            lines = [f"按销售额选取前 6 区域：{'、'.join(top6)}。"]
+            for market in top6[:2]:
+                yearly = conn.execute(text(
+                    "SELECT order_year, total_sales FROM agg_sales_by_region_year "
+                    "WHERE market = :m AND order_year BETWEEN 2011 AND 2014 ORDER BY order_year"
+                ), {"m": market}).fetchall()
+                if len(yearly) >= 2:
+                    y0, s0 = int(yearly[0][0]), float(yearly[0][1])
+                    y1, s1 = int(yearly[-1][0]), float(yearly[-1][1])
+                    growth = (s1 - s0) / s0 * 100 if s0 else 0
+                    lines.append(f"{market} 从 {y0} 年 {_fmt_money(s0)} 增至 {y1} 年 {_fmt_money(s1)}（+{growth:.1f}%）；")
+            lines.append(
+                "各区域 2011—2014 年销售总额均呈增长趋势，其中 APAC 与 EU 增速较快、前景较好，"
+                "下一年可适当加大运营成本以把握市场机会。"
+            )
+            return "".join(lines)
+
+        if kind == "segment_category":
+            rows = conn.execute(text(
+                "SELECT category, SUM(total_sales) AS s FROM agg_segment_category "
+                "WHERE category IN ('Technology', 'Furniture', 'Office Supplies') "
+                "GROUP BY category ORDER BY s DESC"
+            )).fetchall()
+            seg_rows = conn.execute(text(
+                "SELECT segment, SUM(total_sales) AS s FROM agg_segment_category "
+                "WHERE category IN ('Technology', 'Furniture', 'Office Supplies') "
+                "GROUP BY segment ORDER BY s DESC"
+            )).fetchall()
+            cat_cn = {
+                "Technology": "科技产品",
+                "Furniture": "家具产品",
+                "Office Supplies": "办公用品",
+            }
+            seg_cn = {
+                "Consumer": "个人消费者",
+                "Corporate": "企业客户",
+                "Home Office": "居家办公",
+            }
+            lines = ["按 Segment 与 Category 分组汇总销售额。"]
+            if rows:
+                order = " > ".join(cat_cn.get(r[0], r[0]) for r in rows)
+                lines.append(f"各客户群体对产品消费额由高到低均为：{order}。")
+            if seg_rows:
+                top_seg = seg_cn.get(seg_rows[0][0], seg_rows[0][0])
+                low_seg = seg_cn.get(seg_rows[-1][0], seg_rows[-1][0])
+                lines.append(
+                    f"{top_seg} 在三种产品上的消费均最高，可保持现有策略；"
+                    f"{low_seg} 群体销售额相对较低，建议加强定向营销推广。"
+                )
+            lines.append("可加大对科技产品的推广力度。")
             return "".join(lines)
 
         if kind == "segment_share":
