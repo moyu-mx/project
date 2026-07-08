@@ -93,6 +93,20 @@ python -m venv .venv
 
 浏览器访问：**[http://127.0.0.1:8000](http://127.0.0.1:8000)**
 
+### 4. 打包为可执行文件（Windows）
+
+需先完成 ETL（存在 `data/superstore.db`）及分析图表生成：
+
+```powershell
+.\scripts\build_exe.ps1
+```
+
+打包完成后发布目录为 `dist/SuperstoreAnalytics/`：
+
+- 双击 **`SuperstoreAnalytics.exe`** 启动（自动打开浏览器）
+- 整个文件夹可压缩分发，无需安装 Python
+- 可选参数：`SuperstoreAnalytics.exe --port 8001 --no-browser`
+
 ## Web 使用说明
 
 - **左侧导航**：固定不随页面滚动，点击跳转到对应分析区块

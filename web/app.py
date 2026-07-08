@@ -19,7 +19,7 @@ from src.agents.insight_builder import build_insight_markdown
 from src.agents.insight_engine import generate_insights
 from src.agents.report_builder import generate_report_markdown
 from src.analysis.forecast_config import DEFAULTS, FORECAST_OPTIONS, ForecastParams, parse_forecast_params
-from src.config import CHARTS_DIR, LOGS_DIR, PROJECT_ROOT
+from src.config import CHARTS_DIR, LOGS_DIR, PROJECT_ROOT, WEB_DIR
 from src.db.connection import get_engine
 from src.llm.chat_pipeline import run_chat_pipeline
 from src.llm.chat_engine import load_llm_config
@@ -37,7 +37,6 @@ from web.dashboard_charts import (
 
 FORECAST_PARAM_KEYS = frozenset(DEFAULTS.to_dict().keys())
 
-WEB_DIR = PROJECT_ROOT / "web"
 templates = Jinja2Templates(directory=str(WEB_DIR / "templates"))
 app = FastAPI(title="超市电商数据分析")
 app.mount("/static", StaticFiles(directory=str(WEB_DIR / "static")), name="static")

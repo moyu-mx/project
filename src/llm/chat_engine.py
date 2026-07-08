@@ -9,7 +9,7 @@ from pathlib import Path
 
 import yaml
 
-from src.config import CONFIG_DIR, PROJECT_ROOT
+from src.config import CONFIG_DIR, PROMPT_PATH
 from src.llm.response_schema import (
     JSON_SCHEMA_HINT,
     QueryDisplaySpec,
@@ -19,8 +19,6 @@ from src.llm.response_schema import (
 )
 from src.llm.sql_postprocess import postprocess_sql
 from src.mcp.tools import OPENAI_TOOLS, dispatch_tool
-
-PROMPT_PATH = PROJECT_ROOT / "prompts" / "nl2sql.txt"
 
 LOCAL_RULES: list[tuple[re.Pattern, str, str, str | None, str | None]] = [
     (re.compile(r"2013.*区域|区域.*2013"), "SELECT market, SUM(sales) AS total_sales FROM orders WHERE order_year = 2013 GROUP BY market ORDER BY total_sales DESC LIMIT 100", "bar", "market", "total_sales"),
