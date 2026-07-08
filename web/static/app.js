@@ -1280,6 +1280,403 @@ initModeSelect();
 
 
 
+// ---------- Agent1 · 分析报告 ----------
+
+let agentOptionsCache = null;
+
+const agentSelect = document.getElementById("agent-select");
+
+const reportControls = document.getElementById("report-controls");
+
+const insightControls = document.getElementById("insight-controls");
+
+const reportTypeSelect = document.getElementById("report-type-select");
+
+const reportYearSelect = document.getElementById("report-year");
+
+const reportMonthSelect = document.getElementById("report-month");
+
+const reportDaySelect = document.getElementById("report-day");
+
+const reportWeekSelect = document.getElementById("report-week");
+
+const reportRfmSelect = document.getElementById("report-rfm-year");
+
+const reportGenerateBtn = document.getElementById("report-generate-btn");
+
+const insightYearSelect = document.getElementById("insight-year");
+
+const insightMonthSelect = document.getElementById("insight-month");
+
+const insightExtraInput = document.getElementById("insight-extra");
+
+const insightGenerateBtn = document.getElementById("insight-generate-btn");
+
+
+
+function fillSelectRange(select, from, to, selected) {
+
+  if (!select) return;
+
+  select.innerHTML = "";
+
+  for (let v = from; v <= to; v += 1) {
+
+    const opt = document.createElement("option");
+
+    opt.value = String(v);
+
+    opt.textContent = String(v);
+
+    select.appendChild(opt);
+
+  }
+
+  select.value = String(selected);
+
+}
+
+
+
+function updateReportFieldVisibility() {
+
+  const type = reportTypeSelect?.value || "monthly";
+
+  document.getElementById("report-day-wrap")?.classList.toggle("hidden", type !== "daily");
+
+  document.getElementById("report-week-wrap")?.classList.toggle("hidden", type !== "weekly");
+
+  document.getElementById("report-month-wrap")?.classList.toggle(
+
+    "hidden",
+
+    !["monthly", "weekly", "daily"].includes(type),
+
+  );
+
+  document.getElementById("report-rfm-wrap")?.classList.toggle("hidden", type !== "user");
+
+}
+
+
+
+function downloadMarkdown(filename, markdown) {
+
+  const blob = new Blob([markdown], { type: "text/markdown;charset=utf-8" });
+
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+
+  a.href = url;
+
+  a.download = filename;
+
+  a.click();
+
+  URL.revokeObjectURL(url);
+
+}
+
+
+
+function renderMarkdownPreview(md) {
+
+  let html = md
+
+    .replace(/^### (.*)$/gm, "<h3>$1</h3>")
+
+    .replace(/^## (.*)$/gm, "<h2>$1</h2>")
+
+    .replace(/^# (.*)$/gm, "<h1>$1</h1>")
+
+    .replace(/^> (.*)$/gm, "<blockquote>$1</blockquote>")
+
+    .replace(/```mermaid[\s\S]*?```/g, (block) => `<pre class="mermaid-block">${block.replace(/</g, "&lt;")}</pre>`)
+
+    .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+
+  html = html.replace(/^\|(.+)\|\s*\n\|[-| :]+\|\s*\n((?:\|.+\|\s*\n?)*)/gm, (match, header, body) => {
+
+    const ths = header.split("|").filter(Boolean).map((c) => `<th>${c.trim()}</th>`).join("");
+
+    const rows = body.trim().split("\n").map((line) => {
+
+      const tds = line.split("|").filter(Boolean).map((c) => `<td>${c.trim()}</td>`).join("");
+
+      return `<tr>${tds}</tr>`;
+
+    }).join("");
+
+    return `<table><thead><tr>${ths}</tr></thead><tbody>${rows}</tbody></table>`;
+
+  });
+
+  return html;
+
+}
+
+
+
+function switchAgentMode(agentId) {
+
+  const isReport = agentId === "report";
+
+  const isInsight = agentId === "insight";
+
+  const isChat = agentId === "chat";
+
+  reportControls?.classList.toggle("hidden", !isReport);
+
+  insightControls?.classList.toggle("hidden", !isInsight);
+
+  if (form) form.classList.toggle("hidden", !isChat);
+
+}
+
+
+
+async function initAgentReportControls() {
+
+  if (!agentSelect || !reportControls) return;
+
+  try {
+
+    const res = await fetch("/api/agents/options");
+
+    const data = await res.json();
+
+    if (!res.ok) throw new Error("Agent 配置加载失败");
+
+    agentOptionsCache = data;
+
+    if (reportTypeSelect) {
+
+      reportTypeSelect.innerHTML = "";
+
+      (data.report_types || []).forEach((t) => {
+
+        const opt = document.createElement("option");
+
+        opt.value = t.id;
+
+        opt.textContent = t.label;
+
+        reportTypeSelect.appendChild(opt);
+
+      });
+
+      reportTypeSelect.value = data.report_types?.[0]?.id || "monthly";
+
+    }
+
+    const yr = data.year_range || { min: 2011, max: 2014 };
+
+    const defs = data.defaults || {};
+
+    fillSelectRange(reportYearSelect, yr.min, yr.max, defs.year || yr.max);
+
+    fillSelectRange(reportMonthSelect, 1, 12, defs.month || 12);
+
+    fillSelectRange(reportDaySelect, 1, 28, defs.day || 15);
+
+    fillSelectRange(reportWeekSelect, 1, 5, defs.week || 4);
+
+    fillSelectRange(reportRfmSelect, yr.min, yr.max, defs.rfm_year || yr.max);
+
+    fillSelectRange(insightYearSelect, yr.min, yr.max, defs.year || yr.max);
+
+    fillSelectRange(insightMonthSelect, 1, 12, defs.month || 12);
+
+    updateReportFieldVisibility();
+
+    agentSelect.addEventListener("change", () => switchAgentMode(agentSelect.value));
+
+    reportTypeSelect?.addEventListener("change", updateReportFieldVisibility);
+
+    switchAgentMode(agentSelect.value);
+
+    reportGenerateBtn?.addEventListener("click", async () => {
+
+      if (!reportGenerateBtn) return;
+
+      reportGenerateBtn.disabled = true;
+
+      try {
+
+        const payload = {
+
+          report_type: reportTypeSelect?.value || "monthly",
+
+          year: Number(reportYearSelect?.value || 2014),
+
+          month: Number(reportMonthSelect?.value || 12),
+
+          day: Number(reportDaySelect?.value || 15),
+
+          week: Number(reportWeekSelect?.value || 4),
+
+          rfm_year: Number(reportRfmSelect?.value || 2014),
+
+        };
+
+        addMsg(`生成报告：${reportTypeSelect?.selectedOptions?.[0]?.textContent || payload.report_type}`, "user");
+
+        const res = await fetch("/api/agents/report/generate", {
+
+          method: "POST",
+
+          headers: { "Content-Type": "application/json" },
+
+          body: JSON.stringify(payload),
+
+        });
+
+        const report = await res.json();
+
+        if (!res.ok) throw new Error(report.detail || "报告生成失败");
+
+        downloadMarkdown(report.filename, report.markdown);
+
+        const preview = renderMarkdownPreview(report.markdown);
+
+        const wrap = document.createElement("div");
+
+        wrap.className = "report-result";
+
+        wrap.innerHTML = `<p><strong>${report.title}</strong></p><div class="report-preview">${preview}</div>`;
+
+        const btn = document.createElement("button");
+
+        btn.type = "button";
+
+        btn.className = "report-download-btn";
+
+        btn.textContent = `再次下载 ${report.filename}`;
+
+        btn.addEventListener("click", () => downloadMarkdown(report.filename, report.markdown));
+
+        wrap.appendChild(btn);
+
+        const msgDiv = document.createElement("div");
+
+        msgDiv.className = "msg bot";
+
+        msgDiv.appendChild(wrap);
+
+        log?.appendChild(msgDiv);
+
+        if (log) log.scrollTop = log.scrollHeight;
+
+      } catch (err) {
+
+        addMsg(`报告生成失败：${err.message}`, "bot");
+
+      } finally {
+
+        reportGenerateBtn.disabled = false;
+
+      }
+
+    });
+
+    insightGenerateBtn?.addEventListener("click", async () => {
+
+      if (!insightGenerateBtn) return;
+
+      insightGenerateBtn.disabled = true;
+
+      try {
+
+        const payload = {
+
+          year: Number(insightYearSelect?.value || 2014),
+
+          month: Number(insightMonthSelect?.value || 12),
+
+          mode: modeSelect?.value || "local",
+
+          extra_data: insightExtraInput?.value?.trim() || null,
+
+        };
+
+        addMsg(`生成洞察：${payload.year}年${payload.month}月（${payload.mode}）`, "user");
+
+        const res = await fetch("/api/agents/insight/generate", {
+
+          method: "POST",
+
+          headers: { "Content-Type": "application/json" },
+
+          body: JSON.stringify(payload),
+
+        });
+
+        const report = await res.json();
+
+        if (!res.ok) throw new Error(report.detail || "洞察生成失败");
+
+        downloadMarkdown(report.filename, report.markdown);
+
+        const preview = renderMarkdownPreview(report.markdown);
+
+        const wrap = document.createElement("div");
+
+        wrap.className = "report-result";
+
+        wrap.innerHTML = `<p><strong>${report.title}</strong></p>`
+          + `<p class="insight-meta">模式 ${report.insights?.mode || payload.mode} · `
+          + `检测到 ${report.anomaly_count ?? 0} 条异常信号</p>`
+          + `<div class="report-preview">${preview}</div>`;
+
+        const btn = document.createElement("button");
+
+        btn.type = "button";
+
+        btn.className = "report-download-btn";
+
+        btn.textContent = `再次下载 ${report.filename}`;
+
+        btn.addEventListener("click", () => downloadMarkdown(report.filename, report.markdown));
+
+        wrap.appendChild(btn);
+
+        const msgDiv = document.createElement("div");
+
+        msgDiv.className = "msg bot";
+
+        msgDiv.appendChild(wrap);
+
+        log?.appendChild(msgDiv);
+
+        if (log) log.scrollTop = log.scrollHeight;
+
+      } catch (err) {
+
+        addMsg(`洞察生成失败：${err.message}`, "bot");
+
+      } finally {
+
+        insightGenerateBtn.disabled = false;
+
+      }
+
+    });
+
+  } catch (err) {
+
+    console.error(err);
+
+  }
+
+}
+
+
+
+initAgentReportControls();
+
+
+
 function getSelectedMode() {
 
   return modeSelect ? modeSelect.value : "local";
@@ -1384,7 +1781,7 @@ async function renderQueryResult(data) {
 
       try {
 
-        const chart = await mountEchart(el, applyLegendLabelWhite(data.echarts_option));
+        const chart = await mountEchart(el, data.echarts_option);
 
       } catch {
 

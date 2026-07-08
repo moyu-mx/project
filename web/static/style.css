@@ -758,12 +758,126 @@ body.lightbox-open {
   color: var(--text-muted);
   margin-bottom: 0.85rem;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 0.6rem;
   padding: 0.65rem 0.9rem;
   background: rgba(6, 10, 20, 0.5);
   border-radius: var(--radius-sm);
   border: 1px solid var(--border);
+}
+
+.report-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem 0.75rem;
+  margin-bottom: 0.85rem;
+  padding: 0.75rem 0.9rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.report-controls.hidden {
+  display: none;
+}
+
+.report-controls label {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.report-hint {
+  width: 100%;
+  margin-left: 0;
+  margin-top: 0.35rem;
+}
+
+.insight-extra-input {
+  flex: 1 1 220px;
+  min-width: 180px;
+  padding: 0.35rem 0.55rem;
+  font-size: 0.82rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--text);
+}
+
+.insight-meta {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin: 0.25rem 0 0.5rem;
+}
+
+.report-preview .mermaid-block {
+  background: #eef2ff;
+  border: 1px dashed #94a3b8;
+  border-radius: 6px;
+  padding: 0.5rem 0.65rem;
+  font-size: 0.72rem;
+  color: #475569;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.report-preview {
+  margin-top: 0.65rem;
+  padding: 0.85rem 1rem;
+  background: #f8fafc;
+  color: #1e293b;
+  border-radius: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  max-height: 360px;
+  overflow: auto;
+  font-size: 0.82rem;
+  line-height: 1.55;
+}
+
+.report-preview h1,
+.report-preview h2,
+.report-preview h3 {
+  font-size: 1rem;
+  margin: 0.75rem 0 0.35rem;
+  color: #0f172a;
+}
+
+.report-preview table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.5rem 0;
+  font-size: 0.78rem;
+}
+
+.report-preview th,
+.report-preview pre {
+  background: #e2e8f0;
+}
+
+.report-preview th,
+.report-preview td {
+  border: 1px solid #cbd5e1;
+  padding: 0.3rem 0.45rem;
+}
+
+.report-download-btn {
+  margin-top: 0.5rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 6px;
+  border: 1px solid var(--accent-dim);
+  background: transparent;
+  color: var(--accent);
+  cursor: pointer;
+  font-size: 0.82rem;
+}
+
+.report-download-btn:hover {
+  background: rgba(34, 211, 238, 0.12);
+}
+
+.hidden {
+  display: none !important;
 }
 
 .mode-select {

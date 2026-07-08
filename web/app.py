@@ -14,6 +14,10 @@ from pydantic import BaseModel
 from sqlalchemy import text
 from starlette.requests import Request
 
+from src.agents.config import YEAR_MAX, YEAR_MIN, agent_options
+from src.agents.insight_builder import build_insight_markdown
+from src.agents.insight_engine import generate_insights
+from src.agents.report_builder import generate_report_markdown
 from src.analysis.forecast_config import DEFAULTS, FORECAST_OPTIONS, ForecastParams, parse_forecast_params
 from src.config import CHARTS_DIR, LOGS_DIR, PROJECT_ROOT
 from src.db.connection import get_engine
@@ -58,6 +62,42 @@ class ChatRequest(BaseModel):
 class FeedbackRequest(BaseModel):
     query_id: str
     correct: bool
+
+
+class ReportGenerateRequest(BaseModel):
+    report_type: str
+    year: int = 2014
+    month: int = 12
+    day: int = 15
+    week: int = 4
+    rfm_year: int = 2014
+
+
+class InsightGenerateRequest(BaseModel):
+    year: int = 2014
+    month: int = 12
+    mode: str = "local"  # local | api
+    extra_data: str | None = None
+
+
+def _validate_report_request(req: ReportGenerateRequest) -> dict[str, int]:
+    if req.year < YEAR_MIN or req.year > YEAR_MAX:
+        raise HTTPException(400, f"年份需在 {YEAR_MIN}—{YEAR_MAX} 之间")
+    if not 1 <= req.month <= 12:
+        raise HTTPException(400, "月份需在 1—12 之间")
+    if not 1 <= req.day <= 31:
+        raise HTTPException(400, "日期需在 1—31 之间")
+    if not 1 <= req.week <= 5:
+        raise HTTPException(400, "周次需在 1—5 之间")
+    if req.rfm_year < YEAR_MIN or req.rfm_year > YEAR_MAX:
+        raise HTTPException(400, f"RFM 年份需在 {YEAR_MIN}—{YEAR_MAX} 之间")
+    return {
+        "year": req.year,
+        "month": req.month,
+        "day": req.day,
+        "week": req.week,
+        "rfm_year": req.rfm_year,
+    }
 
 
 def _year_bounds() -> dict[str, int]:
@@ -269,6 +309,44 @@ async def chart(name: str):
     if not path.exists():
         raise HTTPException(404, "图表不存在")
     return FileResponse(path)
+
+
+@app.get("/api/agents/options")
+async def agents_options():
+    return agent_options()
+
+
+@app.post("/api/agents/report/generate")
+async def agents_report_generate(req: ReportGenerateRequest):
+    allowed = {t["id"] for t in agent_options()["report_types"]}
+    if req.report_type not in allowed:
+        raise HTTPException(400, f"报告类型无效，可选：{sorted(allowed)}")
+    params = _validate_report_request(req)
+    try:
+        return generate_report_markdown(req.report_type, params)
+    except ValueError as e:
+        raise HTTPException(400, str(e)) from e
+    except Exception as e:
+        raise HTTPException(500, f"报告生成失败: {e}") from e
+
+
+@app.post("/api/agents/insight/generate")
+async def agents_insight_generate(req: InsightGenerateRequest):
+    if req.year < YEAR_MIN or req.year > YEAR_MAX:
+        raise HTTPException(400, f"年份需在 {YEAR_MIN}—{YEAR_MAX} 之间")
+    if not 1 <= req.month <= 12:
+        raise HTTPException(400, "月份需在 1—12 之间")
+    mode = req.mode if req.mode in ("local", "api") else "local"
+    try:
+        payload = await generate_insights(req.year, req.month, mode=mode, extra_data=req.extra_data)
+        result = build_insight_markdown(payload)
+        result["insights"] = payload["insights"]
+        result["anomaly_count"] = len(payload.get("anomalies") or [])
+        return result
+    except ValueError as e:
+        raise HTTPException(400, str(e)) from e
+    except Exception as e:
+        raise HTTPException(500, f"洞察生成失败: {e}") from e
 
 
 @app.get("/api/chat/config")

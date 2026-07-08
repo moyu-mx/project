@@ -5,7 +5,7 @@ import re
 from typing import Any
 
 from src.llm.response_schema import QueryDisplaySpec, TEMPLATE_LABELS
-from src.llm.echarts_style import apply_legend_label_style
+from src.llm.echarts_style import apply_chat_chart_style
 
 NUMERIC_NAME_HINTS = (
     "sales", "profit", "quantity", "total", "amount", "cost", "count", "cnt",
@@ -213,7 +213,7 @@ def build_echarts_option(spec: QueryDisplaySpec, columns: list[str], rows: list[
             "legend": {"type": "scroll", "orient": "vertical", "left": "left", "top": "middle"},
             "series": [{"type": "pie", "radius": "55%", "center": ["58%", "50%"], "data": pie_data}],
         }
-        return apply_legend_label_style(option)
+        return apply_chat_chart_style(option)
 
     if spec.template in ("bar", "horizontal_bar", "line"):
         series = []
@@ -243,7 +243,7 @@ def build_echarts_option(spec: QueryDisplaySpec, columns: list[str], rows: list[
                 "yAxis": {"type": "category", "data": categories, "inverse": True},
                 "series": series,
             }
-            return apply_legend_label_style(option)
+            return apply_chat_chart_style(option)
 
         option = {
             "title": {"text": spec.chart_title, "textStyle": {"fontSize": 14}},
@@ -253,6 +253,6 @@ def build_echarts_option(spec: QueryDisplaySpec, columns: list[str], rows: list[
             "yAxis": {"type": "value"},
             "series": series,
         }
-        return apply_legend_label_style(option)
+        return apply_chat_chart_style(option)
 
     return None

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>超市电商数据分析</title>
   <link rel="icon" href="/favicon.ico" type="image/svg+xml">
-  <link rel="stylesheet" href="/static/style.css?v=6">
+  <link rel="stylesheet" href="/static/style.css?v=7">
 </head>
 <body>
   <header>
@@ -125,11 +125,51 @@
       <section id="chat">
         <h2>大模型智能查询</h2>
         <div class="chat-mode-bar">
+          <label for="agent-select">Agent</label>
+          <select id="agent-select" class="mode-select" aria-label="Agent 选择">
+            <option value="chat" selected>智能查询</option>
+            <option value="report">Agent1 · 分析报告</option>
+            <option value="insight">Agent2 · 数据洞察推理</option>
+          </select>
           <label for="chat-mode-select">调用方式</label>
           <select id="chat-mode-select" class="mode-select">
             <option value="local" selected>本地模式</option>
             <option value="api" disabled>API 模式（即将开放）</option>
           </select>
+        </div>
+        <div id="report-controls" class="report-controls hidden" aria-label="报告参数">
+          <label for="report-type-select">报告类型</label>
+          <select id="report-type-select" class="mode-select"></select>
+          <label for="report-year">年份</label>
+          <select id="report-year" class="year-select"></select>
+          <span id="report-month-wrap">
+            <label for="report-month">月份</label>
+            <select id="report-month" class="year-select"></select>
+          </span>
+          <span id="report-day-wrap" class="hidden">
+            <label for="report-day">日期</label>
+            <select id="report-day" class="year-select"></select>
+          </span>
+          <span id="report-week-wrap" class="hidden">
+            <label for="report-week">周次</label>
+            <select id="report-week" class="year-select"></select>
+          </span>
+          <span id="report-rfm-wrap" class="hidden">
+            <label for="report-rfm-year">RFM 年</label>
+            <select id="report-rfm-year" class="year-select"></select>
+          </span>
+          <button type="button" id="report-generate-btn" class="forecast-apply-btn">生成 Markdown 报告</button>
+          <span class="overview-hint report-hint">报告含 Mermaid 图表，下载后在 Typora / GitHub 中打开可查看完整图表</span>
+        </div>
+        <div id="insight-controls" class="report-controls hidden" aria-label="洞察参数">
+          <label for="insight-year">年份</label>
+          <select id="insight-year" class="year-select"></select>
+          <label for="insight-month">月份</label>
+          <select id="insight-month" class="year-select"></select>
+          <label for="insight-extra">补充数据（可选）</label>
+          <input id="insight-extra" type="text" class="insight-extra-input" placeholder="粘贴查询结果或备注，供 API 模式解读">
+          <button type="button" id="insight-generate-btn" class="forecast-apply-btn">生成洞察报告</button>
+          <span class="overview-hint report-hint">含波动原因、异常预警、机会点；API 模式需配置 DeepSeek 密钥</span>
         </div>
         <div class="chat-box">
           <div id="chat-log"></div>
@@ -161,6 +201,6 @@
   </div>
 
   <script id="chart-insights-data" type="application/json">{{ insights_json | safe }}</script>
-  <script src="/static/app.js?v=12" defer></script>
+  <script src="/static/app.js?v=14" defer></script>
 </body>
 </html>

@@ -66,3 +66,65 @@ def apply_legend_label_style(option: dict[str, Any] | None) -> dict[str, Any] | 
                 style["fill"] = LABEL_COLOR
 
     return opt
+
+
+def apply_chat_chart_style(option: dict[str, Any] | None) -> dict[str, Any] | None:
+    """大模型对话图表：保留 ECharts 默认彩色图例与注记，仅移除内嵌标题。"""
+    if not option:
+        return option
+
+    opt = deepcopy(option)
+    opt.pop("title", None)
+
+    legend = opt.get("legend")
+    if isinstance(legend, dict) and legend:
+        styled = {**legend, "show": True}
+        text_style = styled.get("textStyle")
+        if isinstance(text_style, dict):
+            text_style = dict(text_style)
+            text_style.pop("color", None)
+            styled["textStyle"] = text_style or None
+            if styled["textStyle"] is None:
+                styled.pop("textStyle", None)
+        opt["legend"] = styled
+    elif isinstance(legend, list):
+        items = []
+        for item in legend:
+            if not isinstance(item, dict):
+                items.append(item)
+                continue
+            styled_item = {**item, "show": True}
+            text_style = styled_item.get("textStyle")
+            if isinstance(text_style, dict):
+                text_style = dict(text_style)
+                text_style.pop("color", None)
+                styled_item["textStyle"] = text_style or None
+                if styled_item["textStyle"] is None:
+                    styled_item.pop("textStyle", None)
+            items.append(styled_item)
+        opt["legend"] = items
+
+    for series in opt.get("series") or []:
+        if not isinstance(series, dict):
+            continue
+        label = series.get("label")
+        if label is False:
+            continue
+        if series.get("type") in ("bar", "line") and not isinstance(label, dict):
+            series["label"] = {"show": True, "position": "top"}
+        elif isinstance(label, dict) and label.get("show") is not False:
+            label.pop("color", None)
+
+        if series.get("type") == "pie" and isinstance(series.get("data"), list):
+            for item in series["data"]:
+                if not isinstance(item, dict):
+                    continue
+                item_label = item.get("label")
+                if item_label is False:
+                    continue
+                if isinstance(item_label, dict):
+                    item_label.pop("color", None)
+                    if item_label.get("show") is True:
+                        item["labelLine"] = {**(item.get("labelLine") or {}), "show": True}
+
+    return opt
