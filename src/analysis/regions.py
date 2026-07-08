@@ -37,7 +37,7 @@ def run() -> None:
     )
     yearly.index = yearly.index.astype(int)
     ax = yearly.plot(kind="bar", figsize=(10, 5), rot=0)
-    ax.set_title("前六区域年度销售额（2011-2014）")
+    ax.set_title("前六区域年度销售额")
     ax.set_xlabel("年份")
     ax.set_ylabel("销售额")
     ax.legend(title="区域", bbox_to_anchor=(1.02, 1), loc="upper left")

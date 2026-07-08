@@ -16,7 +16,7 @@ SEGMENT_MAP = {
 }
 
 
-def run(snapshot_year: int = 2014) -> pd.DataFrame:
+def run(snapshot_year: int = 2014, *, save_chart: bool = True) -> pd.DataFrame:
     df = load_cleaned()
     sub = df[df["Order-year"] == snapshot_year].copy()
     ref = pd.Timestamp(f"{snapshot_year}-12-31")
@@ -34,9 +34,10 @@ def run(snapshot_year: int = 2014) -> pd.DataFrame:
         for r, f, m in zip(rfm["r_score"], rfm["f_score"], rfm["m_score"])
     ]
 
-    counts = rfm["value_segment"].value_counts()
-    fig, ax = plt.subplots(figsize=(9, 9))
-    ax.pie(counts.values, labels=counts.index, autopct="%1.1f%%")
-    ax.set_title(f"{snapshot_year} 年 RFM 客户价值分布")
-    save_fig("rfm_distribution.png")
+    if save_chart:
+        counts = rfm["value_segment"].value_counts()
+        fig, ax = plt.subplots(figsize=(9, 9))
+        ax.pie(counts.values, labels=counts.index, autopct="%1.1f%%")
+        ax.set_title(f"{snapshot_year} 年 RFM 客户价值分布")
+        save_fig("rfm_distribution.png")
     return rfm.reset_index()

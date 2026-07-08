@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>超市电商数据分析</title>
   <link rel="icon" href="/favicon.ico" type="image/svg+xml">
-  <link rel="stylesheet" href="/static/style.css?v=4">
+  <link rel="stylesheet" href="/static/style.css?v=6">
 </head>
 <body>
   <header>
@@ -43,33 +43,47 @@
       <section id="overview">
         <h2>数据源概况</h2>
         <p>本案例对大型超市零售数据进行多维度分析，涵盖利润、销售额、区域、客户价值等维度。</p>
-        <ul class="stats">
-          <li>订单记录<strong>{{ stats.orders }}</strong></li>
-          <li>客户数<strong>{{ stats.customers }}</strong></li>
-          <li>产品数<strong>{{ stats.products }}</strong></li>
-          <li>区域数<strong>{{ stats.markets }}</strong></li>
+        <div class="overview-toolbar">
+          <span class="overview-toolbar-label">年份范围</span>
+          <select id="overview-year-from" class="year-select" aria-label="起始年份">
+            <option value="">全部</option>
+          </select>
+          <span class="overview-year-sep">至</span>
+          <select id="overview-year-to" class="year-select" aria-label="结束年份">
+            <option value="">全部</option>
+          </select>
+          <button type="button" id="overview-year-reset" class="overview-reset-btn">重置</button>
+          <span id="overview-range-hint" class="overview-hint">默认展示全部数据</span>
+        </div>
+        <ul class="stats" id="overview-stats">
+          <li>订单记录<strong id="stat-orders">{{ stats.orders }}</strong></li>
+          <li>客户数<strong id="stat-customers">{{ stats.customers }}</strong></li>
+          <li>产品数<strong id="stat-products">{{ stats.products }}</strong></li>
+          <li>区域数<strong id="stat-markets">{{ stats.markets }}</strong></li>
         </ul>
       </section>
 
-      {% macro chart_figure(img) %}
+      {% macro chart_figure(img, section='') %}
       {% set title = insights.get(img, {}).get('title', img.replace('.png', '')) %}
       <figure class="chart-card">
-        <img class="chart-thumb" src="/charts/{{ img }}" alt="{{ title }}" data-chart="{{ img }}" loading="lazy">
+        <div class="dashboard-chart chart-thumb" data-chart="{{ img }}"{% if section %} data-section="{{ section }}"{% endif %} role="img" aria-label="{{ title }}" tabindex="0"></div>
         <figcaption>{{ title }}</figcaption>
       </figure>
       {% endmacro %}
 
       <section id="sales">
         <h2>销售与利润分析</h2>
+        <p id="sales-range-note" class="section-range-note">默认展示全部年份；随上方数据概况年份范围联动更新</p>
         <div class="chart-grid">
-          {% for img in charts.sales %}{{ chart_figure(img) }}{% endfor %}
+          {% for img in charts.sales %}{{ chart_figure(img, 'sales') }}{% endfor %}
         </div>
       </section>
 
       <section id="region">
         <h2>区域分店分析</h2>
+        <p id="region-range-note" class="section-range-note">默认展示全部年份；随上方数据概况年份范围联动更新</p>
         <div class="chart-grid">
-          {% for img in charts.region %}{{ chart_figure(img) }}{% endfor %}
+          {% for img in charts.region %}{{ chart_figure(img, 'region') }}{% endfor %}
         </div>
       </section>
 
@@ -82,16 +96,29 @@
 
       <section id="rfm">
         <h2>RFM 客户价值</h2>
+        <div class="overview-toolbar rfm-toolbar">
+          <span class="overview-toolbar-label">分析年份</span>
+          <select id="rfm-year-select" class="year-select" aria-label="RFM 分析年份"></select>
+          <span id="rfm-range-hint" class="overview-hint">选择要查看的 RFM 快照年份</span>
+        </div>
         <div class="chart-grid">
-          {% for img in charts.rfm %}{{ chart_figure(img) }}{% endfor %}
+          {% for img in charts.rfm %}{{ chart_figure(img, 'rfm') }}{% endfor %}
         </div>
       </section>
 
       <section id="forecast">
         <h2>预测分析</h2>
-        <p>销售额、区域、淡旺季采用<strong>线性回归 + 季节指数</strong>；客单价采用 <strong>ML 融合模型</strong>（RF/GBR/Ridge 自动选型）。基于 2011—2014 原始订单明细，展望 2015 年（虚线/金色为预测值）。</p>
+        <p id="forecast-desc" class="section-range-note">基于 2011—2014 原始订单明细展望 2015 年。可自选预测模型与关键参数（默认值为推荐配置），修改后点击「应用预测」刷新图表。</p>
+        <div id="forecast-controls" class="forecast-panel">
+          <div id="forecast-fields" class="forecast-fields" aria-label="预测参数配置"></div>
+          <div class="forecast-actions">
+            <button type="button" id="forecast-apply-btn" class="forecast-apply-btn">应用预测</button>
+            <button type="button" id="forecast-reset-btn" class="overview-reset-btn">恢复默认</button>
+          </div>
+          <span id="forecast-hint" class="overview-hint">当前使用推荐默认参数</span>
+        </div>
         <div class="chart-grid">
-          {% for img in charts.forecast %}{{ chart_figure(img) }}{% endfor %}
+          {% for img in charts.forecast %}{{ chart_figure(img, 'forecast') }}{% endfor %}
         </div>
       </section>
 
@@ -123,7 +150,7 @@
       <h2 id="lb-title" class="lightbox-title"></h2>
       <div class="lightbox-content">
         <div class="lightbox-image-area">
-          <img id="lb-image" src="" alt="">
+          <div id="lb-chart" class="lb-chart-box"></div>
         </div>
         <aside class="lightbox-analysis">
           <h3>数据分析解读</h3>
@@ -134,6 +161,6 @@
   </div>
 
   <script id="chart-insights-data" type="application/json">{{ insights_json | safe }}</script>
-  <script src="/static/app.js?v=3" defer></script>
+  <script src="/static/app.js?v=12" defer></script>
 </body>
 </html>

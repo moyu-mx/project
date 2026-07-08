@@ -352,6 +352,194 @@ section > p {
   text-shadow: 0 0 20px var(--glow-strong);
 }
 
+.overview-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem 0.75rem;
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.overview-toolbar-label {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.overview-year-sep {
+  color: var(--text-dim);
+  font-size: 0.85rem;
+}
+
+.year-select {
+  min-width: 88px;
+  padding: 0.4rem 0.65rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg-panel);
+  color: var(--text);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.year-select:focus {
+  outline: none;
+  border-color: var(--border-hover);
+  box-shadow: 0 0 0 2px var(--glow);
+}
+
+.overview-reset-btn {
+  padding: 0.4rem 0.75rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.overview-reset-btn:hover {
+  border-color: var(--border-hover);
+  color: var(--accent);
+}
+
+.overview-hint {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  margin-left: auto;
+}
+
+@media (max-width: 768px) {
+  .overview-hint {
+    width: 100%;
+    margin-left: 0;
+  }
+}
+
+.section-range-note {
+  font-size: 0.82rem;
+  color: var(--text-dim);
+  margin: 0.35rem 0 0.85rem;
+}
+
+.forecast-panel {
+  margin: 0.75rem 0 1rem;
+  padding: 0.85rem 1rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.forecast-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0.65rem 1rem;
+}
+
+.forecast-group {
+  padding: 0.55rem 0.65rem;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.forecast-group.is-collapsed .forecast-group-body {
+  display: none;
+}
+
+.forecast-group-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--accent);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.forecast-group-toggle:hover {
+  color: var(--text);
+}
+
+.forecast-group-body {
+  margin-top: 0.55rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.forecast-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.forecast-field.is-hidden {
+  display: none;
+}
+
+.forecast-field label {
+  font-size: 0.76rem;
+  color: var(--text-muted);
+}
+
+.forecast-field input,
+.forecast-field select {
+  padding: 0.35rem 0.55rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg-deep);
+  color: var(--text);
+  font-size: 0.82rem;
+}
+
+.forecast-field input:focus,
+.forecast-field select:focus {
+  outline: none;
+  border-color: var(--border-hover);
+  box-shadow: 0 0 0 2px var(--glow);
+}
+
+.forecast-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem;
+  margin-top: 0.75rem;
+}
+
+.forecast-apply-btn {
+  padding: 0.42rem 0.9rem;
+  border-radius: 6px;
+  border: 1px solid var(--accent-dim);
+  background: linear-gradient(135deg, rgba(34, 211, 238, 0.2), rgba(59, 130, 246, 0.15));
+  color: var(--accent);
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.forecast-apply-btn:hover {
+  border-color: var(--accent);
+  box-shadow: 0 0 12px var(--glow);
+}
+
+.forecast-panel .overview-hint {
+  margin-top: 0.55rem;
+  margin-left: 0;
+  width: 100%;
+}
+
 /* ---------- 图表网格 ---------- */
 .chart-grid {
   display: grid;
@@ -381,15 +569,30 @@ section > p {
   width: 100%;
   aspect-ratio: 4 / 3;
   height: auto;
-  object-fit: contain;
-  object-position: center;
+  min-height: 200px;
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 6px;
   display: block;
   cursor: zoom-in;
   transition: all var(--transition);
-  background: #fff;
+  background: rgba(255, 255, 255, 0.02);
   flex-shrink: 0;
+}
+
+.dashboard-chart {
+  position: relative;
+}
+
+.dashboard-chart.is-loading::after {
+  content: "加载中…";
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  background: rgba(0, 0, 0, 0.25);
 }
 
 .chart-thumb:hover {
@@ -504,15 +707,10 @@ body.lightbox-open {
   overflow: auto;
 }
 
-.lightbox-image-area img {
-  max-width: 100%;
-  max-height: 70vh;
-  width: auto;
-  height: auto;
-  object-fit: contain;
-  border-radius: 6px;
-  border: 1px solid var(--border);
-  box-shadow: 0 0 30px var(--glow);
+.lb-chart-box {
+  width: 100%;
+  height: min(70vh, 520px);
+  min-height: 320px;
 }
 
 .lightbox-analysis {
@@ -551,7 +749,7 @@ body.lightbox-open {
   main { padding: 1rem; }
   .lightbox-content { flex-direction: column; overflow-y: auto; }
   .lightbox-analysis { max-width: none; border-left: none; border-top: 1px solid var(--border); }
-  .lightbox-image-area img { max-height: 45vh; }
+  .lb-chart-box { height: 45vh; min-height: 240px; }
 }
 
 /* ---------- 智能查询 ---------- */

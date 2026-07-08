@@ -19,7 +19,8 @@ def test_homepage_lightbox():
     assert r.status_code == 200
     html = r.text
     assert 'id="lightbox"' in html
-    assert html.count("chart-thumb") == 17
+    assert html.count("dashboard-chart") == 17
+    assert 'id="lb-chart"' in html
     assert "chart-insights-data" in html
     assert "sales_growth" in html
     assert "segment_category_sales.png" in html

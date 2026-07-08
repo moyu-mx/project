@@ -145,20 +145,25 @@ def load_aggregates(df: pd.DataFrame, engine) -> None:
         .rename(columns={"Segment": "segment", "Category": "category", "Sales": "total_sales"})
     )
 
-    rfm_df = run_rfm(2014)
-    rfm_db = rfm_df.rename(
-        columns={
-            "Customer ID": "customer_id",
-            "recency": "recency_days",
-            "frequency": "frequency",
-            "monetary": "monetary",
-            "r_score": "r_score",
-            "f_score": "f_score",
-            "m_score": "m_score",
-            "value_segment": "value_segment",
-        }
-    )
-    rfm_db["snapshot_year"] = 2014
+    rfm_years = sorted(int(y) for y in df["Order-year"].dropna().unique())
+    rfm_frames: list[pd.DataFrame] = []
+    for year in rfm_years:
+        rfm_df = run_rfm(year, save_chart=(year == rfm_years[-1]))
+        rfm_part = rfm_df.rename(
+            columns={
+                "Customer ID": "customer_id",
+                "recency": "recency_days",
+                "frequency": "frequency",
+                "monetary": "monetary",
+                "r_score": "r_score",
+                "f_score": "f_score",
+                "m_score": "m_score",
+                "value_segment": "value_segment",
+            }
+        )
+        rfm_part["snapshot_year"] = year
+        rfm_frames.append(rfm_part)
+    rfm_db = pd.concat(rfm_frames, ignore_index=True)
 
     with engine.begin() as conn:
         for t in [

@@ -19,13 +19,13 @@ CHART_META: dict[str, dict[str, str]] = {
     "seasonality_sales.png": {"title": "月度销售额与淡旺季", "kind": "seasonality"},
     "shipping_cost_trend.png": {"title": "发货成本月度趋势", "kind": "shipping"},
     "region_share.png": {"title": "各区域销售额占比", "kind": "region_share"},
-    "region_yearly_sales_top6.png": {"title": "前六区域年度销售额（2011-2014）", "kind": "region_yearly_top6"},
+    "region_yearly_sales_top6.png": {"title": "前六区域年度销售额", "kind": "region_yearly_top6"},
     "new_old_customers.png": {"title": "新老客户数量（按年）", "kind": "new_old"},
     "segment_share.png": {"title": "客户类型占比", "kind": "segment_share"},
     "segment_yearly_count.png": {"title": "各年不同类型客户数量", "kind": "segment_count"},
     "segment_yearly_sales.png": {"title": "各类型客户年度销售额", "kind": "segment_sales"},
     "segment_category_sales.png": {"title": "客户群体与产品类别销售额分析", "kind": "segment_category"},
-    "rfm_distribution.png": {"title": "RFM 客户价值分布（2014）", "kind": "rfm"},
+    "rfm_distribution.png": {"title": "RFM 客户价值分布", "kind": "rfm"},
     "sales_forecast.png": {"title": "年度销售额预测（2015）", "kind": "sales_forecast"},
     "aov_forecast.png": {"title": "月度客单价趋势与预测", "kind": "aov_forecast"},
     "seasonality_forecast.png": {"title": "月度销售额淡旺季预测", "kind": "seasonality_forecast"},
@@ -287,12 +287,16 @@ def _build_analysis(kind: str, conn, forecast_report: dict | None = None) -> str
             return "".join(lines)
 
         if kind == "rfm":
-            rows = conn.execute(text(
-                "SELECT value_segment, COUNT(*) AS c FROM customer_rfm WHERE snapshot_year=2014 "
-                "GROUP BY value_segment ORDER BY c DESC"
-            )).fetchall()
+            rfm_year = conn.execute(text("SELECT MAX(snapshot_year) FROM customer_rfm")).scalar() or 2014
+            rows = conn.execute(
+                text(
+                    "SELECT value_segment, COUNT(*) AS c FROM customer_rfm WHERE snapshot_year=:y "
+                    "GROUP BY value_segment ORDER BY c DESC"
+                ),
+                {"y": rfm_year},
+            ).fetchall()
             total = sum(r[1] for r in rows) or 1
-            lines = ["基于 2014 年订单，按 R/F/M 三维度划分 8 类客户价值。"]
+            lines = [f"基于 {rfm_year} 年订单，按 R/F/M 三维度划分 8 类客户价值。"]
             for seg, c in rows[:4]:
                 lines.append(f"{seg} 占 {c / total * 100:.1f}%；")
             vip = sum(c for seg, c in rows if "重要" in seg)
@@ -334,3 +338,8 @@ def build_insights() -> dict[str, dict[str, str]]:
                 analysis = "请先运行 ETL 入库后再查看数据分析。"
             result[fname] = {"title": meta["title"], "analysis": analysis}
     return result
+
+
+def build_forecast_chart_analysis(kind: str, report: dict) -> str:
+    """根据动态预测报告生成单图解读文案。"""
+    return _build_forecast_analysis(kind, report)
