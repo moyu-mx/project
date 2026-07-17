@@ -54,15 +54,22 @@ foreach ($item in $copyItems) {
 
 $readmePath = Join-Path $OutDir "README.txt"
 @(
-    "Superstore Analytics v1.5"
+    "超市电商数据分析平台 v1.6"
     ""
-    "1. Run SuperstoreAnalytics.exe"
-    "2. Browser opens http://127.0.0.1:8000"
-    "3. Close console window to stop"
+    "【使用】"
+    "1. 解压整个 SuperstoreAnalytics 文件夹（不要只复制 exe）"
+    "2. 双击 SuperstoreAnalytics.exe"
+    "3. 浏览器自动打开 http://127.0.0.1:8000"
+    "4. 关闭控制台窗口即停止服务"
     ""
-    "Options:"
+    "【可选参数】"
     "  SuperstoreAnalytics.exe --port 8001"
     "  SuperstoreAnalytics.exe --no-browser"
+    ""
+    "【API 模式】"
+    "  默认 local 模式，无需联网。"
+    "  若需 API：复制 config\llm_keys.yaml.example 为 llm_keys.yaml 并填入密钥。"
+    "  详见 docs\环境配置与运行.md「关键配置」一节。"
 ) | Set-Content -Path $readmePath -Encoding UTF8
 
 Write-Host ""

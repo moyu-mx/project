@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>超市电商数据分析</title>
   <link rel="icon" href="/favicon.ico" type="image/svg+xml">
-  <link rel="stylesheet" href="/static/style.css?v=7">
+  <link rel="stylesheet" href="/static/style.css?v=8">
 </head>
 <body>
   <header>
@@ -28,158 +28,221 @@
       </div>
     </div>
   </header>
+
   <div class="layout">
-    <nav>
-      <div class="nav-label">Navigation</div>
-      <a href="#overview">数据概况</a>
-      <a href="#sales">销售分析</a>
-      <a href="#region">区域分析</a>
-      <a href="#customer">客户分析</a>
-      <a href="#rfm">RFM 分群</a>
-      <a href="#forecast">预测分析</a>
-      <a href="#chat">智能查询</a>
+    <nav aria-label="主导航">
+      <div class="nav-group">
+        <div class="nav-label">概览</div>
+        <a href="#overview" data-page="overview" class="active">数据概况</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-label">分析模块</div>
+        <a href="#sales" data-page="sales">销售分析</a>
+        <a href="#region" data-page="region">区域分析</a>
+        <a href="#customer" data-page="customer">客户分析</a>
+        <a href="#rfm" data-page="rfm">RFM 分群</a>
+        <a href="#forecast" data-page="forecast">预测分析</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-label">智能服务</div>
+        <a href="#chat" data-page="chat">智能查询</a>
+      </div>
+      <div class="nav-footer">
+        <span class="nav-version">v1.6</span>
+      </div>
     </nav>
+
     <main>
-      <section id="overview">
-        <h2>数据源概况</h2>
-        <p>本案例对大型超市零售数据进行多维度分析，涵盖利润、销售额、区域、客户价值等维度。</p>
-        <div class="overview-toolbar">
-          <span class="overview-toolbar-label">年份范围</span>
-          <select id="overview-year-from" class="year-select" aria-label="起始年份">
-            <option value="">全部</option>
-          </select>
-          <span class="overview-year-sep">至</span>
-          <select id="overview-year-to" class="year-select" aria-label="结束年份">
-            <option value="">全部</option>
-          </select>
-          <button type="button" id="overview-year-reset" class="overview-reset-btn">重置</button>
-          <span id="overview-range-hint" class="overview-hint">默认展示全部数据</span>
+      <div class="page-toolbar" id="page-toolbar">
+        <div class="page-breadcrumb">
+          <span class="page-breadcrumb-root">数据分析平台</span>
+          <span class="page-breadcrumb-sep">/</span>
+          <span class="page-breadcrumb-current" id="page-breadcrumb-current">数据概况</span>
         </div>
-        <ul class="stats" id="overview-stats">
-          <li>订单记录<strong id="stat-orders">{{ stats.orders }}</strong></li>
-          <li>客户数<strong id="stat-customers">{{ stats.customers }}</strong></li>
-          <li>产品数<strong id="stat-products">{{ stats.products }}</strong></li>
-          <li>区域数<strong id="stat-markets">{{ stats.markets }}</strong></li>
-        </ul>
-      </section>
+        <p class="page-desc" id="page-desc">本案例对大型超市零售数据进行多维度分析，涵盖利润、销售额、区域、客户价值等维度。</p>
+      </div>
 
-      {% macro chart_figure(img, section='') %}
-      {% set title = insights.get(img, {}).get('title', img.replace('.png', '')) %}
-      <figure class="chart-card">
-        <div class="dashboard-chart chart-thumb" data-chart="{{ img }}"{% if section %} data-section="{{ section }}"{% endif %} role="img" aria-label="{{ title }}" tabindex="0"></div>
-        <figcaption>{{ title }}</figcaption>
-      </figure>
-      {% endmacro %}
-
-      <section id="sales">
-        <h2>销售与利润分析</h2>
-        <p id="sales-range-note" class="section-range-note">默认展示全部年份；随上方数据概况年份范围联动更新</p>
-        <div class="chart-grid">
-          {% for img in charts.sales %}{{ chart_figure(img, 'sales') }}{% endfor %}
-        </div>
-      </section>
-
-      <section id="region">
-        <h2>区域分店分析</h2>
-        <p id="region-range-note" class="section-range-note">默认展示全部年份；随上方数据概况年份范围联动更新</p>
-        <div class="chart-grid">
-          {% for img in charts.region %}{{ chart_figure(img, 'region') }}{% endfor %}
-        </div>
-      </section>
-
-      <section id="customer">
-        <h2>客户分析</h2>
-        <div class="chart-grid">
-          {% for img in charts.customer %}{{ chart_figure(img) }}{% endfor %}
-        </div>
-      </section>
-
-      <section id="rfm">
-        <h2>RFM 客户价值</h2>
-        <div class="overview-toolbar rfm-toolbar">
-          <span class="overview-toolbar-label">分析年份</span>
-          <select id="rfm-year-select" class="year-select" aria-label="RFM 分析年份"></select>
-          <span id="rfm-range-hint" class="overview-hint">选择要查看的 RFM 快照年份</span>
-        </div>
-        <div class="chart-grid">
-          {% for img in charts.rfm %}{{ chart_figure(img, 'rfm') }}{% endfor %}
-        </div>
-      </section>
-
-      <section id="forecast">
-        <h2>预测分析</h2>
-        <p id="forecast-desc" class="section-range-note">基于 2011—2014 原始订单明细展望 2015 年。可自选预测模型与关键参数（默认值为推荐配置），修改后点击「应用预测」刷新图表。</p>
-        <div id="forecast-controls" class="forecast-panel">
-          <div id="forecast-fields" class="forecast-fields" aria-label="预测参数配置"></div>
-          <div class="forecast-actions">
-            <button type="button" id="forecast-apply-btn" class="forecast-apply-btn">应用预测</button>
-            <button type="button" id="forecast-reset-btn" class="overview-reset-btn">恢复默认</button>
+      <div class="page-views" id="page-views">
+        <section id="overview" class="page-panel is-active" data-page-title="数据概况">
+          <div class="section-head">
+            <h2>数据源概况</h2>
+            <span class="section-badge">Overview</span>
           </div>
-          <span id="forecast-hint" class="overview-hint">当前使用推荐默认参数</span>
-        </div>
-        <div class="chart-grid">
-          {% for img in charts.forecast %}{{ chart_figure(img, 'forecast') }}{% endfor %}
-        </div>
-      </section>
+          <div class="overview-toolbar">
+            <span class="overview-toolbar-label">年份范围</span>
+            <select id="overview-year-from" class="year-select" aria-label="起始年份">
+              <option value="">全部</option>
+            </select>
+            <span class="overview-year-sep">至</span>
+            <select id="overview-year-to" class="year-select" aria-label="结束年份">
+              <option value="">全部</option>
+            </select>
+            <button type="button" id="overview-year-reset" class="overview-reset-btn">重置</button>
+            <span id="overview-range-hint" class="overview-hint">默认展示全部数据</span>
+          </div>
+          <ul class="stats" id="overview-stats">
+            <li class="stat-card" data-stat="orders">
+              <span class="stat-label">订单记录</span>
+              <strong id="stat-orders">{{ stats.orders }}</strong>
+            </li>
+            <li class="stat-card" data-stat="customers">
+              <span class="stat-label">客户数</span>
+              <strong id="stat-customers">{{ stats.customers }}</strong>
+            </li>
+            <li class="stat-card" data-stat="products">
+              <span class="stat-label">产品数</span>
+              <strong id="stat-products">{{ stats.products }}</strong>
+            </li>
+            <li class="stat-card" data-stat="markets">
+              <span class="stat-label">区域数</span>
+              <strong id="stat-markets">{{ stats.markets }}</strong>
+            </li>
+          </ul>
+        </section>
 
-      <section id="chat">
-        <h2>大模型智能查询</h2>
-        <div class="chat-mode-bar">
-          <label for="agent-select">Agent</label>
-          <select id="agent-select" class="mode-select" aria-label="Agent 选择">
-            <option value="chat" selected>智能查询</option>
-            <option value="report">Agent1 · 分析报告</option>
-            <option value="insight">Agent2 · 数据洞察推理</option>
-          </select>
-          <label for="chat-mode-select">调用方式</label>
-          <select id="chat-mode-select" class="mode-select">
-            <option value="local" selected>本地模式</option>
-            <option value="api" disabled>API 模式（即将开放）</option>
-          </select>
-        </div>
-        <div id="report-controls" class="report-controls hidden" aria-label="报告参数">
-          <label for="report-type-select">报告类型</label>
-          <select id="report-type-select" class="mode-select"></select>
-          <label for="report-year">年份</label>
-          <select id="report-year" class="year-select"></select>
-          <span id="report-month-wrap">
-            <label for="report-month">月份</label>
-            <select id="report-month" class="year-select"></select>
-          </span>
-          <span id="report-day-wrap" class="hidden">
-            <label for="report-day">日期</label>
-            <select id="report-day" class="year-select"></select>
-          </span>
-          <span id="report-week-wrap" class="hidden">
-            <label for="report-week">周次</label>
-            <select id="report-week" class="year-select"></select>
-          </span>
-          <span id="report-rfm-wrap" class="hidden">
-            <label for="report-rfm-year">RFM 年</label>
-            <select id="report-rfm-year" class="year-select"></select>
-          </span>
-          <button type="button" id="report-generate-btn" class="forecast-apply-btn">生成 Markdown 报告</button>
-          <span class="overview-hint report-hint">报告含 Mermaid 图表，下载后在 Typora / GitHub 中打开可查看完整图表</span>
-        </div>
-        <div id="insight-controls" class="report-controls hidden" aria-label="洞察参数">
-          <label for="insight-year">年份</label>
-          <select id="insight-year" class="year-select"></select>
-          <label for="insight-month">月份</label>
-          <select id="insight-month" class="year-select"></select>
-          <label for="insight-extra">补充数据（可选）</label>
-          <input id="insight-extra" type="text" class="insight-extra-input" placeholder="粘贴查询结果或备注，供 API 模式解读">
-          <button type="button" id="insight-generate-btn" class="forecast-apply-btn">生成洞察报告</button>
-          <span class="overview-hint report-hint">含波动原因、异常预警、机会点；API 模式需配置 DeepSeek 密钥</span>
-        </div>
-        <div class="chat-box">
-          <div id="chat-log"></div>
-          <form id="chat-form">
-            <input id="question" type="text" placeholder="输入自然语言问题，例如：2013年各区域销售额是多少？" required>
-            <button type="submit">执行查询</button>
-          </form>
-          <div id="diagnose" class="diagnose hidden"></div>
-        </div>
-      </section>
+        {% macro chart_figure(img, section='') %}
+        {% set title = insights.get(img, {}).get('title', img.replace('.png', '')) %}
+        <figure class="chart-card">
+          <div class="dashboard-chart chart-thumb" data-chart="{{ img }}"{% if section %} data-section="{{ section }}"{% endif %} role="img" aria-label="{{ title }}" tabindex="0"></div>
+          <figcaption>{{ title }}</figcaption>
+        </figure>
+        {% endmacro %}
+
+        <section id="sales" class="page-panel" data-page-title="销售分析">
+          <div class="section-head">
+            <h2>销售与利润分析</h2>
+            <span class="section-badge">Sales</span>
+          </div>
+          <p id="sales-range-note" class="section-range-note">默认展示全部年份；随数据概况年份范围联动更新</p>
+          <div class="chart-grid">
+            {% for img in charts.sales %}{{ chart_figure(img, 'sales') }}{% endfor %}
+          </div>
+        </section>
+
+        <section id="region" class="page-panel" data-page-title="区域分析">
+          <div class="section-head">
+            <h2>区域分店分析</h2>
+            <span class="section-badge">Region</span>
+          </div>
+          <p id="region-range-note" class="section-range-note">默认展示全部年份；随数据概况年份范围联动更新</p>
+          <div class="chart-grid">
+            {% for img in charts.region %}{{ chart_figure(img, 'region') }}{% endfor %}
+          </div>
+        </section>
+
+        <section id="customer" class="page-panel" data-page-title="客户分析">
+          <div class="section-head">
+            <h2>客户分析</h2>
+            <span class="section-badge">Customer</span>
+          </div>
+          <p class="section-range-note">客户类型、新老客户结构与消费行为多维对比</p>
+          <div class="chart-grid">
+            {% for img in charts.customer %}{{ chart_figure(img) }}{% endfor %}
+          </div>
+        </section>
+
+        <section id="rfm" class="page-panel" data-page-title="RFM 分群">
+          <div class="section-head">
+            <h2>RFM 客户价值</h2>
+            <span class="section-badge">RFM</span>
+          </div>
+          <div class="overview-toolbar rfm-toolbar">
+            <span class="overview-toolbar-label">分析年份</span>
+            <select id="rfm-year-select" class="year-select" aria-label="RFM 分析年份"></select>
+            <span id="rfm-range-hint" class="overview-hint">选择要查看的 RFM 快照年份</span>
+          </div>
+          <div class="chart-grid">
+            {% for img in charts.rfm %}{{ chart_figure(img, 'rfm') }}{% endfor %}
+          </div>
+        </section>
+
+        <section id="forecast" class="page-panel" data-page-title="预测分析">
+          <div class="section-head">
+            <h2>预测分析</h2>
+            <span class="section-badge">Forecast</span>
+          </div>
+          <p id="forecast-desc" class="section-range-note">基于 2011—2014 原始订单明细展望 2015 年。可自选预测模型与关键参数（默认值为推荐配置），修改后点击「应用预测」刷新图表。</p>
+          <div id="forecast-controls" class="forecast-panel">
+            <div id="forecast-fields" class="forecast-fields" aria-label="预测参数配置"></div>
+            <div class="forecast-actions">
+              <button type="button" id="forecast-apply-btn" class="forecast-apply-btn">应用预测</button>
+              <button type="button" id="forecast-reset-btn" class="overview-reset-btn">恢复默认</button>
+            </div>
+            <span id="forecast-hint" class="overview-hint">当前使用推荐默认参数</span>
+          </div>
+          <div class="chart-grid">
+            {% for img in charts.forecast %}{{ chart_figure(img, 'forecast') }}{% endfor %}
+          </div>
+        </section>
+
+        <section id="chat" class="page-panel" data-page-title="智能查询">
+          <div class="section-head">
+            <h2>大模型智能查询</h2>
+            <span class="section-badge">AI Agent</span>
+          </div>
+          <div class="chat-layout">
+            <aside class="chat-sidebar">
+              <div class="chat-mode-bar">
+                <label for="agent-select">Agent</label>
+                <select id="agent-select" class="mode-select" aria-label="Agent 选择">
+                  <option value="chat" selected>智能查询</option>
+                  <option value="report">Agent1 · 分析报告</option>
+                  <option value="insight">Agent2 · 数据洞察推理</option>
+                </select>
+                <label for="chat-mode-select">调用方式</label>
+                <select id="chat-mode-select" class="mode-select">
+                  <option value="local" selected>本地模式</option>
+                  <option value="api" disabled>API 模式（即将开放）</option>
+                </select>
+              </div>
+              <div id="report-controls" class="report-controls hidden" aria-label="报告参数">
+                <label for="report-type-select">报告类型</label>
+                <select id="report-type-select" class="mode-select"></select>
+                <label for="report-year">年份</label>
+                <select id="report-year" class="year-select"></select>
+                <span id="report-month-wrap">
+                  <label for="report-month">月份</label>
+                  <select id="report-month" class="year-select"></select>
+                </span>
+                <span id="report-day-wrap" class="hidden">
+                  <label for="report-day">日期</label>
+                  <select id="report-day" class="year-select"></select>
+                </span>
+                <span id="report-week-wrap" class="hidden">
+                  <label for="report-week">周次</label>
+                  <select id="report-week" class="year-select"></select>
+                </span>
+                <span id="report-rfm-wrap" class="hidden">
+                  <label for="report-rfm-year">RFM 年</label>
+                  <select id="report-rfm-year" class="year-select"></select>
+                </span>
+                <button type="button" id="report-generate-btn" class="forecast-apply-btn">生成 Markdown 报告</button>
+                <span class="overview-hint report-hint">报告含 Mermaid 图表，下载后在 Typora / GitHub 中打开可查看完整图表</span>
+              </div>
+              <div id="insight-controls" class="report-controls hidden" aria-label="洞察参数">
+                <label for="insight-year">年份</label>
+                <select id="insight-year" class="year-select"></select>
+                <label for="insight-month">月份</label>
+                <select id="insight-month" class="year-select"></select>
+                <label for="insight-extra">补充数据（可选）</label>
+                <input id="insight-extra" type="text" class="insight-extra-input" placeholder="粘贴查询结果或备注，供 API 模式解读">
+                <button type="button" id="insight-generate-btn" class="forecast-apply-btn">生成洞察报告</button>
+                <span class="overview-hint report-hint">含波动原因、异常预警、机会点；API 模式需配置 DeepSeek 密钥</span>
+              </div>
+            </aside>
+            <div class="chat-main">
+              <div class="chat-box">
+                <div id="chat-log"></div>
+                <form id="chat-form">
+                  <input id="question" type="text" placeholder="输入自然语言问题，例如：2013年各区域销售额是多少？" required>
+                  <button type="submit">执行查询</button>
+                </form>
+                <div id="diagnose" class="diagnose hidden"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
     </main>
   </div>
 
@@ -201,6 +264,6 @@
   </div>
 
   <script id="chart-insights-data" type="application/json">{{ insights_json | safe }}</script>
-  <script src="/static/app.js?v=14" defer></script>
+  <script src="/static/app.js?v=15" defer></script>
 </body>
 </html>

@@ -514,6 +514,9 @@ async function reloadSectionCharts(section, options = {}) {
 
   }
 
+  const active = document.querySelector(".page-panel.is-active");
+  if (active?.id === section) resizePageCharts(section);
+
   return data;
 
 }
@@ -582,7 +585,10 @@ async function initDashboardCharts() {
 
 
 
-initDashboardCharts();
+initDashboardCharts().then(() => {
+  const active = document.querySelector(".page-panel.is-active");
+  if (active) resizePageCharts(active.id);
+});
 
 
 
@@ -1146,91 +1152,70 @@ document.addEventListener("keydown", (e) => {
 
 // ---------- 导航 ----------
 
-function scrollToSection(id) {
+const PAGE_DESC = {
+  overview: "本案例对大型超市零售数据进行多维度分析，涵盖利润、销售额、区域、客户价值等维度。",
+  sales: "销售额、利润、客单价、淡旺季与发货成本等核心经营指标可视化分析。",
+  region: "各区域销售占比、年度趋势与分店表现对比。",
+  customer: "客户类型、新老客户结构与消费行为多维对比。",
+  rfm: "基于 RFM 模型的客户价值分层与运营策略参考。",
+  forecast: "基于 2011—2014 历史数据，对 2015 年关键指标进行趋势外推预测。",
+  chat: "自然语言查询数据库，或调用 Agent 生成分析报告与数据洞察。",
+};
 
-  const target = document.getElementById(id);
+const DEFAULT_PAGE = "overview";
 
-  if (!target || !mainEl) return;
-
-  const mainRect = mainEl.getBoundingClientRect();
-
-  const targetRect = target.getBoundingClientRect();
-
-  mainEl.scrollTo({
-
-    top: mainEl.scrollTop + targetRect.top - mainRect.top - 16,
-
-    behavior: "smooth",
-
+function resizePageCharts(pageId) {
+  const panel = document.getElementById(pageId);
+  if (!panel) return;
+  requestAnimationFrame(() => {
+    panel.querySelectorAll(".dashboard-chart").forEach((el) => {
+      const chartId = el.dataset.chart;
+      const inst = dashboardChartInstances.get(chartId);
+      if (inst) inst.resize();
+    });
   });
-
 }
 
+function updatePageToolbar(pageId) {
+  const panel = document.getElementById(pageId);
+  const breadcrumb = document.getElementById("page-breadcrumb-current");
+  const desc = document.getElementById("page-desc");
+  if (breadcrumb) {
+    breadcrumb.textContent = panel?.dataset.pageTitle || pageId;
+  }
+  if (desc) {
+    desc.textContent = PAGE_DESC[pageId] || "";
+  }
+}
 
+function switchPage(pageId) {
+  if (!document.getElementById(pageId)) return;
+
+  document.querySelectorAll(".page-panel").forEach((panel) => {
+    panel.classList.toggle("is-active", panel.id === pageId);
+  });
+
+  document.querySelectorAll("nav a[href^='#']").forEach((a) => {
+    a.classList.toggle("active", a.getAttribute("href") === `#${pageId}`);
+  });
+
+  updatePageToolbar(pageId);
+  resizePageCharts(pageId);
+
+  if (mainEl) mainEl.scrollTop = 0;
+  history.replaceState(null, "", `#${pageId}`);
+}
 
 document.querySelectorAll("nav a[href^='#']").forEach((link) => {
-
   link.addEventListener("click", (e) => {
-
     e.preventDefault();
-
-    const id = link.getAttribute("href").slice(1);
-
-    scrollToSection(id);
-
-    document.querySelectorAll("nav a").forEach((a) => a.classList.remove("active"));
-
-    link.classList.add("active");
-
-    history.replaceState(null, "", `#${id}`);
-
+    switchPage(link.getAttribute("href").slice(1));
   });
-
 });
 
-
-
-if (location.hash) {
-
-  const init = document.querySelector(`nav a[href="${location.hash}"]`);
-
-  if (init) {
-
-    init.classList.add("active");
-
-    requestAnimationFrame(() => scrollToSection(location.hash.slice(1)));
-
-  }
-
-}
-
-
-
-// 鼠标滚轮：在 layout 区域滚动时同步滚动 main
-
-if (layoutEl && mainEl) {
-
-  layoutEl.addEventListener(
-
-    "wheel",
-
-    (e) => {
-
-      if (e.target.closest("nav") || e.target.closest("#chat-log")) return;
-
-      if (mainEl.scrollHeight <= mainEl.clientHeight) return;
-
-      mainEl.scrollTop += e.deltaY;
-
-      e.preventDefault();
-
-    },
-
-    { passive: false }
-
-  );
-
-}
+const initialHash = location.hash.slice(1);
+const initialPage = initialHash && document.getElementById(initialHash) ? initialHash : DEFAULT_PAGE;
+switchPage(initialPage);
 
 
 
